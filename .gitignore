@@ -1,0 +1,109 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+
+# Flutter related
+**/build/
+.flutter-plugins
+.flutter-plugins-dependencies
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+.idea/
+.macos/
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+
+# Android Studio related
+*.iml
+.gradle/
+local.properties
+.DS_Store
+android/app/key.properties
+android/key.properties
+android/app/upload-keystore.jks
+android/local.properties
+.idea/
+.cxx/
+*.hprof
+
+# Generated files
+coverage/
+*.log
+.dart_tool/
+.macos/
+windows/
+linux/
+web/
+
+# Temporary files
+*.swp
+*.swo
+*.tmp
+*.temp
+
+# IntelliJ related (Android Studio is based on IntelliJ)
+.idea/modules.xml
+.idea/*.iml
+.idea/workspace.xml
+.idea/libraries
+.idea/caches
+.idea/shelf
+.idea/tasks.xml
+.idea/gradle.xml
+.idea/assetWizardSettings.xml
+.idea/dictionaries
+.idea/vcs.xml
+.idea/jsLibraryMappings.xml
+.idea/webResources.xml
+
+# VS Code related (if using it occasionally)
+.vscode/
+*.code-workspace
+
+# Other
+*.keystore
+*.jks
+
