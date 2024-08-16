@@ -1,5 +1,3 @@
-// lib/services/ssh_manager.dart
-
 import 'package:dartssh2/dartssh2.dart';
 import 'dart:convert';
 import 'connection_manager.dart';

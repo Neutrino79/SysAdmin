@@ -27,9 +27,7 @@ class _RegisterConnectionPageState extends State<RegisterConnectionPage> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme
-        .of(context)
-        .colorScheme;
+    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
       backgroundColor: colorScheme.primary,
       body: CustomScrollView(
@@ -57,14 +55,9 @@ class _RegisterConnectionPageState extends State<RegisterConnectionPage> {
           ),
           SliverToBoxAdapter(
             child: Container(
-              height: MediaQuery
-                  .of(context)
-                  .size
-                  .height + 50,
+              height: MediaQuery.of(context).size.height + 50,
               decoration: BoxDecoration(
-                color: Theme
-                    .of(context)
-                    .scaffoldBackgroundColor,
+                color: Theme.of(context).scaffoldBackgroundColor,
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(30),
                   topRight: Radius.circular(30),
@@ -87,7 +80,7 @@ class _RegisterConnectionPageState extends State<RegisterConnectionPage> {
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 24),
                     ElevatedButton.icon(
                       onPressed: () {
                         // Implement QR scanning functionality
@@ -103,72 +96,21 @@ class _RegisterConnectionPageState extends State<RegisterConnectionPage> {
                     const SizedBox(height: 24),
                     const Text(
                       'Existing Connections',
-                      style: TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
                     FutureBuilder<List<SSHConnection>>(
                       future: _connectionsFuture,
                       builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
                           return const CircularProgressIndicator();
                         } else if (snapshot.hasError) {
                           return Text('Error: ${snapshot.error}');
-                        } else
-                        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                           return const Text('No connections found');
                         } else {
                           return Column(
-                            children: snapshot.data!.map((connection) =>
-                                Card(
-                                  color: colorScheme.surfaceVariant,
-                                  elevation: 4,
-                                  margin: const EdgeInsets.symmetric(
-                                      vertical: 8),
-                                  child: ListTile(
-                                    leading: Icon(Icons.computer,
-                                        color: colorScheme.secondary),
-                                    title: Text(connection.name),
-                                    subtitle: Text(connection.hostId),
-                                    trailing: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        ElevatedButton(
-                                          onPressed: () async {
-                                            final sshManager = SSHManager.getInstance();
-                                            final success = await sshManager.connectToServer(connection);
-                                            if (success) {
-                                              await ConnectionManager.getInstance().setActiveConnection(connection.name);
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                const SnackBar(content: Text('Connected successfully')),
-                                              );
-                                              Navigator.pushReplacementNamed(context, '/home');
-                                            } else {
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                const SnackBar(content: Text('Connection failed')),
-                                              );
-                                            }
-                                          },
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: colorScheme
-                                                .primary,
-                                            foregroundColor: colorScheme
-                                                .onPrimary,
-                                          ),
-                                          child: const Text('Connect'),
-                                        ),
-                                        IconButton(
-                                          icon: const Icon(Icons.more_vert),
-                                          onPressed: () {
-                                            _showBottomSheet(
-                                                context, connection);
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                )).toList(),
+                            children: snapshot.data!.map((connection) => _buildConnectionCard(connection)).toList(),
                           );
                         }
                       },
@@ -183,6 +125,53 @@ class _RegisterConnectionPageState extends State<RegisterConnectionPage> {
     );
   }
 
+  Widget _buildConnectionCard(SSHConnection connection) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Card(
+      color: colorScheme.surfaceVariant,
+      elevation: 4,
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      child: ListTile(
+        leading: Icon(Icons.computer, color: colorScheme.secondary),
+        title: Text(connection.name),
+        subtitle: Text(connection.hostId),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ElevatedButton(
+              onPressed: () => _connectToServer(connection),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
+              ),
+              child: const Text('Connect'),
+            ),
+            IconButton(
+              icon: const Icon(Icons.more_vert),
+              onPressed: () => _showBottomSheet(context, connection),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _connectToServer(SSHConnection connection) async {
+    final sshManager = SSHManager.getInstance();
+    final success = await sshManager.connectToServer(connection);
+    if (success) {
+      await ConnectionManager.getInstance().setActiveConnection(connection.name);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Connected successfully')),
+      );
+      Navigator.pushReplacementNamed(context, '/home');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Connection failed')),
+      );
+    }
+  }
+
   void _showBottomSheet(BuildContext context, SSHConnection connection) {
     showModalBottomSheet(
       context: context,
@@ -195,14 +184,7 @@ class _RegisterConnectionPageState extends State<RegisterConnectionPage> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text('Connection Details',
-                  style: Theme
-                      .of(context)
-                      .textTheme
-                      .headlineSmall!
-                      .copyWith(
-                      fontWeight: FontWeight.bold
-                  )
-              ),
+                  style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontWeight: FontWeight.bold)),
               const SizedBox(height: 24),
               _buildDetailRow('Name', connection.name),
               const SizedBox(height: 8),
@@ -211,24 +193,10 @@ class _RegisterConnectionPageState extends State<RegisterConnectionPage> {
               _buildDetailRow('Host ID', connection.hostId),
               const SizedBox(height: 24),
               ElevatedButton(
-                onPressed: () async {
-                  await ConnectionManager.getInstance().deleteConnection(
-                      connection.name);
-                  Navigator.pop(context);
-                  _refreshConnections();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Connection deleted')),
-                  );
-                },
+                onPressed: () => _deleteConnection(connection),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme
-                      .of(context)
-                      .colorScheme
-                      .error,
-                  foregroundColor: Theme
-                      .of(context)
-                      .colorScheme
-                      .onError,
+                  backgroundColor: Theme.of(context).colorScheme.error,
+                  foregroundColor: Theme.of(context).colorScheme.onError,
                   minimumSize: const Size(200, 50),
                 ),
                 child: const Text('Delete Connection'),
@@ -250,5 +218,12 @@ class _RegisterConnectionPageState extends State<RegisterConnectionPage> {
     );
   }
 
-
+  Future<void> _deleteConnection(SSHConnection connection) async {
+    await ConnectionManager.getInstance().deleteConnection(connection.name);
+    Navigator.pop(context);
+    _refreshConnections();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Connection deleted')),
+    );
+  }
 }

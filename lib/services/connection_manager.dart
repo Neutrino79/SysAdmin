@@ -137,4 +137,16 @@ class ConnectionManager {
     final connections = await _getConnections();
     return connections.any((conn) => conn.hostId == hostId);
   }
+
+  Future<void> deactivateCurrentConnection() async {
+    final connections = await getConnections();
+    for (var conn in connections) {
+      if (conn.isActive) {
+        conn.isActive = false;
+        break;
+      }
+    }
+    await _saveConnections(connections);
+  }
+
 }
