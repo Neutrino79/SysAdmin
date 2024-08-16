@@ -8,7 +8,7 @@ class SSHConnection {
   final String hostId;
   final String username;
   final String privateKeyContent;
-  final bool isActive;
+  bool isActive;
 
   SSHConnection({
     required this.name,
@@ -60,6 +60,28 @@ class ConnectionManager {
   Future<List<SSHConnection>> getConnections() async {
     return await _getConnections();
   }
+
+
+  Future<String> getInitialRoute() async {
+    final connections = await getConnections();
+    if (connections.isEmpty) {
+      return '/welcome';
+    } else if (connections.any((conn) => conn.isActive)) {
+      return '/home';
+    } else {
+      return '/register';
+    }
+  }
+
+  Future<void> setActiveConnection(String name) async {
+    final connections = await getConnections();
+    for (var conn in connections) {
+      conn.isActive = (conn.name == name);
+    }
+    await _saveConnections(connections);
+  }
+
+
 
   Future<List<Map<String, String>>> getConnectionSummaries() async {
     final connections = await _getConnections();

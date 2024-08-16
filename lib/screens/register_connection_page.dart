@@ -136,21 +136,17 @@ class _RegisterConnectionPageState extends State<RegisterConnectionPage> {
                                       children: [
                                         ElevatedButton(
                                           onPressed: () async {
-                                            final sshManager = SSHManager
-                                                .getInstance();
-                                            final success = await sshManager
-                                                .connectToServer(connection);
+                                            final sshManager = SSHManager.getInstance();
+                                            final success = await sshManager.connectToServer(connection);
                                             if (success) {
-                                              ScaffoldMessenger.of(context)
-                                                  .showSnackBar(
-                                                const SnackBar(content: Text(
-                                                    'Connected successfully')),
+                                              await ConnectionManager.getInstance().setActiveConnection(connection.name);
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                const SnackBar(content: Text('Connected successfully')),
                                               );
+                                              Navigator.pushReplacementNamed(context, '/home');
                                             } else {
-                                              ScaffoldMessenger.of(context)
-                                                  .showSnackBar(
-                                                const SnackBar(content: Text(
-                                                    'Connection failed')),
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                const SnackBar(content: Text('Connection failed')),
                                               );
                                             }
                                           },
