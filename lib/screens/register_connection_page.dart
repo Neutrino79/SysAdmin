@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../widgets/add_connection_dialog.dart';
 import '../services/connection_manager.dart';
 import '../services/ssh_manager.dart';
+import 'custom_scrollable_page.dart';
 
 class RegisterConnectionPage extends StatefulWidget {
   const RegisterConnectionPage({Key? key}) : super(key: key);
@@ -25,100 +26,60 @@ class _RegisterConnectionPageState extends State<RegisterConnectionPage> {
     });
   }
 
-  @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    return Scaffold(
-      backgroundColor: colorScheme.primary,
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            expandedHeight: 200.0,
-            floating: false,
-            pinned: true,
-            flexibleSpace: FlexibleSpaceBar(
-              centerTitle: true,
-              title: Text('SSH Manager',
-                  style: TextStyle(color: colorScheme.onPrimary)),
-              background: Container(
-                child: Center(
-                  child: Icon(
-                    Icons.device_hub,
-                    size: 80,
-                    color: colorScheme.onPrimary.withOpacity(0.7),
-                  ),
-                ),
-              ),
+    return CustomScrollablePage(
+      title: 'SSH Manager',
+      icon: Icons.device_hub,
+      content: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ElevatedButton.icon(
+            onPressed: () {
+              showAddConnectionDialog(context, _refreshConnections);
+            },
+            icon: const Icon(Icons.add),
+            label: const Text('Add Connection Manually'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: colorScheme.primary,
+              foregroundColor: colorScheme.onPrimary,
+              padding: const EdgeInsets.symmetric(vertical: 12),
             ),
-            backgroundColor: colorScheme.primary,
-            automaticallyImplyLeading: false,
           ),
-          SliverToBoxAdapter(
-            child: Container(
-              height: MediaQuery.of(context).size.height + 50,
-              decoration: BoxDecoration(
-                color: Theme.of(context).scaffoldBackgroundColor,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(30),
-                  topRight: Radius.circular(30),
-                ),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        showAddConnectionDialog(context, _refreshConnections);
-                      },
-                      icon: const Icon(Icons.add),
-                      label: const Text('Add Connection Manually'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: colorScheme.primary,
-                        foregroundColor: colorScheme.onPrimary,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        // Implement QR scanning functionality
-                      },
-                      icon: const Icon(Icons.qr_code),
-                      label: const Text('Add Using QR'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: colorScheme.secondary,
-                        foregroundColor: colorScheme.onSecondary,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    const Text(
-                      'Existing Connections',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    FutureBuilder<List<SSHConnection>>(
-                      future: _connectionsFuture,
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return const CircularProgressIndicator();
-                        } else if (snapshot.hasError) {
-                          return Text('Error: ${snapshot.error}');
-                        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                          return const Text('No connections found');
-                        } else {
-                          return Column(
-                            children: snapshot.data!.map((connection) => _buildConnectionCard(connection)).toList(),
-                          );
-                        }
-                      },
-                    ),
-                  ],
-                ),
-              ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: () {
+              // Implement QR scanning functionality
+            },
+            icon: const Icon(Icons.qr_code),
+            label: const Text('Add Using QR'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: colorScheme.secondary,
+              foregroundColor: colorScheme.onSecondary,
+              padding: const EdgeInsets.symmetric(vertical: 12),
             ),
+          ),
+          const SizedBox(height: 24),
+          const Text(
+            'Existing Connections',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          FutureBuilder<List<SSHConnection>>(
+            future: _connectionsFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const CircularProgressIndicator();
+              } else if (snapshot.hasError) {
+                return Text('Error: ${snapshot.error}');
+              } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return const Text('No connections found');
+              } else {
+                return Column(
+                  children: snapshot.data!.map((connection) => _buildConnectionCard(connection)).toList(),
+                );
+              }
+            },
           ),
         ],
       ),
@@ -164,7 +125,8 @@ class _RegisterConnectionPageState extends State<RegisterConnectionPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Connected successfully')),
       );
-      Navigator.pushReplacementNamed(context, '/home');
+      // Replace the current route with the home route
+      Navigator.of(context).pushNamedAndRemoveUntil('/home', (Route<dynamic> route) => false);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Connection failed')),
