@@ -50,6 +50,7 @@ dev_dependencies:
   flutter_secure_storage: ^8.0.0
   file_picker: ^5.3.2
   dynamic_color: ^1.7.0
+  google_fonts: 6.2.1
 
 
 # For information on the generic Dart part of this file, see the

@@ -15,6 +15,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin {
   late Future<SSHConnection?> _activeConnectionFuture;
   late AnimationController _animationController;
+  int _selectedIndex = 0;
 
   @override
   void initState() {
@@ -65,6 +66,16 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
           return CustomScrollablePage(
             title: activeConnection?.name ?? 'Not Connected',
             icon: Icons.computer,
+            showBottomNav: true,
+            selectedIndex: _selectedIndex,
+            onBottomNavTap: (index) {
+              setState(() {
+                _selectedIndex = index;
+              });
+              // Handle navigation based on the tapped index
+              // For example:
+              // if (index == 1) Navigator.pushNamed(context, '/terminal');
+            },
             content: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [

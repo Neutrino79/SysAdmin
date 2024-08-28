@@ -13,6 +13,7 @@ class RegisterConnectionPage extends StatefulWidget {
 
 class _RegisterConnectionPageState extends State<RegisterConnectionPage> {
   late Future<List<SSHConnection>> _connectionsFuture;
+  int _selectedIndex = 0;
 
   @override
   void initState() {
@@ -31,6 +32,18 @@ class _RegisterConnectionPageState extends State<RegisterConnectionPage> {
     return CustomScrollablePage(
       title: 'SSH Manager',
       icon: Icons.device_hub,
+      showBottomNav: false,
+      showDrawer: false,
+      showSettings: false,
+      selectedIndex: _selectedIndex,
+      onBottomNavTap: (index) {
+        setState(() {
+          _selectedIndex = index;
+        });
+        // Handle navigation based on the tapped index
+        // For example:
+        // if (index == 1) Navigator.pushNamed(context, '/terminal');
+      },
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
