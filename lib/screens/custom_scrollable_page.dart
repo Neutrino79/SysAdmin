@@ -42,7 +42,7 @@ class CustomScrollablePage extends StatelessWidget {
           ),
           SliverToBoxAdapter(
             child: Container(
-              height: MediaQuery.of(context).size.height + 50,
+              height: MediaQuery.of(context).size.height + 500,
               decoration: BoxDecoration(
                 color: Theme.of(context).scaffoldBackgroundColor,
                 borderRadius: const BorderRadius.only(
