@@ -21,6 +21,7 @@ class ConnectionStatusCard extends StatelessWidget {
 
     return Card(
       elevation: 4,
+      color: colorScheme.surfaceVariant,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -38,16 +39,15 @@ class ConnectionStatusCard extends StatelessWidget {
             _buildStatusRow(colorScheme),
             if (connection != null) ...[
               const SizedBox(height: 16),
-              _buildInfoRow(Icons.computer, 'Host', connection!.hostId),
+              _buildInfoRow(context, Icons.computer, 'Host', connection!.hostId),
               const SizedBox(height: 8),
-              _buildInfoRow(Icons.person, 'Username', connection!.username),
+              _buildInfoRow(context, Icons.person, 'Username', connection!.username),
             ],
           ],
         ),
       ),
     );
   }
-
 
   Widget _buildStatusRow(ColorScheme colorScheme) {
     final statusColor = _getStatusColor(colorScheme);
@@ -94,22 +94,24 @@ class ConnectionStatusCard extends StatelessWidget {
     }
   }
 
-  Widget _buildInfoRow(IconData icon, String label, String value) {
+  Widget _buildInfoRow(BuildContext context, IconData icon, String label, String value) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Row(
       children: [
-        Icon(icon, size: 16, color: Colors.grey[600]),
+        Icon(icon, size: 16, color: colorScheme.primary),
         const SizedBox(width: 8),
         Text(
           '$label: ',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: Colors.grey[700],
+            color: colorScheme.onSurfaceVariant,
           ),
         ),
         Expanded(
           child: Text(
             value,
-            style: TextStyle(color: Colors.grey[600]),
+            style: TextStyle(color: colorScheme.onSurfaceVariant),
             overflow: TextOverflow.ellipsis,
           ),
         ),

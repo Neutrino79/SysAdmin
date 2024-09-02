@@ -14,6 +14,7 @@ class RegisterConnectionPage extends StatefulWidget {
 class _RegisterConnectionPageState extends State<RegisterConnectionPage> {
   late Future<List<SSHConnection>> _connectionsFuture;
   int _selectedIndex = 0;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -27,6 +28,7 @@ class _RegisterConnectionPageState extends State<RegisterConnectionPage> {
     });
   }
 
+  @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     return CustomScrollablePage(
@@ -40,9 +42,6 @@ class _RegisterConnectionPageState extends State<RegisterConnectionPage> {
         setState(() {
           _selectedIndex = index;
         });
-        // Handle navigation based on the tapped index
-        // For example:
-        // if (index == 1) Navigator.pushNamed(context, '/terminal');
       },
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -105,40 +104,51 @@ class _RegisterConnectionPageState extends State<RegisterConnectionPage> {
       color: colorScheme.surfaceVariant,
       elevation: 4,
       margin: const EdgeInsets.symmetric(vertical: 8),
-      child: ListTile(
-        leading: Icon(Icons.computer, color: colorScheme.secondary),
-        title: Text(connection.name),
-        subtitle: Text(connection.hostId),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ElevatedButton(
-              onPressed: () => _connectToServer(connection),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: colorScheme.primary,
-                foregroundColor: colorScheme.onPrimary,
-              ),
-              child: const Text('Connect'),
+      child: StatefulBuilder(
+        builder: (context, setState) {
+          return ListTile(
+            leading: Icon(Icons.computer, color: colorScheme.secondary),
+            title: Text(connection.name),
+            subtitle: Text(connection.hostId),
+            trailing: _isLoading
+                ? CircularProgressIndicator()
+                : Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ElevatedButton(
+                  onPressed: () => _connectToServer(connection, setState),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: colorScheme.primary,
+                    foregroundColor: colorScheme.onPrimary,
+                  ),
+                  child: const Text('Connect'),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.more_vert),
+                  onPressed: () => _showBottomSheet(context, connection),
+                ),
+              ],
             ),
-            IconButton(
-              icon: const Icon(Icons.more_vert),
-              onPressed: () => _showBottomSheet(context, connection),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
 
-  Future<void> _connectToServer(SSHConnection connection) async {
+  Future<void> _connectToServer(SSHConnection connection, void Function(void Function()) setState) async {
+    setState(() {
+      _isLoading = true;
+    });
+
     final sshManager = SSHManager.getInstance();
     final success = await sshManager.connectToServer(connection);
+
+    setState(() {
+      _isLoading = false;
+    });
+
     if (success) {
       await ConnectionManager.getInstance().setActiveConnection(connection.name);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Connected successfully')),
-      );
-      // Replace the current route with the home route
       Navigator.of(context).pushNamedAndRemoveUntil('/home', (Route<dynamic> route) => false);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(

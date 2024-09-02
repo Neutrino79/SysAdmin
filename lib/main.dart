@@ -55,23 +55,27 @@ class SysAdminApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'SysAdmin',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-        useMaterial3: true,
-      ),
-      darkTheme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue, brightness: Brightness.dark),
-        useMaterial3: true,
-      ),
-      themeMode: ThemeMode.system,
-      initialRoute: initialRoute,
-      routes: {
-        '/welcome': (context) => const WelcomePage(),
-        '/register': (context) => const RegisterConnectionPage(),
-        '/home': (context) => const SysAdminWrapper(child: const HomePage(), currentRouteName: '/home'),
+    return DynamicColorBuilder(
+      builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'SysAdmin',
+          theme: ThemeData(
+            colorScheme: lightDynamic ?? ColorScheme.fromSeed(seedColor: Colors.blue),
+            useMaterial3: true,
+          ),
+          darkTheme: ThemeData(
+            colorScheme: darkDynamic ?? ColorScheme.fromSeed(seedColor: Colors.blue, brightness: Brightness.dark),
+            useMaterial3: true,
+          ),
+          themeMode: ThemeMode.system,
+          initialRoute: initialRoute,
+          routes: {
+            '/welcome': (context) => const WelcomePage(),
+            '/register': (context) => const RegisterConnectionPage(),
+            '/home': (context) => const SysAdminWrapper(child: HomePage(), currentRouteName: '/home'),
+          },
+        );
       },
     );
   }
