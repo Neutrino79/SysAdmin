@@ -1,80 +1,46 @@
+// lib/widgets/home_page/connection-status-card.dart
+
 import 'package:flutter/material.dart';
-import '../../../services/ssh_manager.dart';
-import 'dart:math' as math;
-
 import '../../services/connection_manager.dart';
+import '../../services/connection_state_manager.dart' as csm;
 
-class ConnectionStatusCard extends StatefulWidget {
+class ConnectionStatusCard extends StatelessWidget {
   final SSHConnection? connection;
+  final csm.ConnectionState connectionState;
 
-  const ConnectionStatusCard({Key? key, required this.connection}) : super(key: key);
-
-  @override
-  _ConnectionStatusCardState createState() => _ConnectionStatusCardState();
-}
-
-class _ConnectionStatusCardState extends State<ConnectionStatusCard> with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-
-  @override
-  void initState() {
-    super.initState();
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
+  const ConnectionStatusCard({
+    Key? key,
+    required this.connection,
+    required this.connectionState,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Card(
-      elevation: 8,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      color: colorScheme.secondaryContainer,
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Connection Status',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: colorScheme.onSecondaryContainer),
-                ),
-                AnimatedBuilder(
-                  animation: _animationController,
-                  builder: (_, child) {
-                    return Transform.rotate(
-                      angle: _animationController.value * 2 * math.pi,
-                      child: Icon(
-                        widget.connection != null ? Icons.sync : Icons.sync_disabled,
-                        color: widget.connection != null ? Colors.green : Colors.red,
-                        size: 28,
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
             Text(
-              widget.connection != null ? 'Connected' : 'Not Connected',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: colorScheme.onSecondaryContainer),
+              'Connection Status',
+              style: theme.textTheme.titleLarge?.copyWith(
+                color: colorScheme.primary,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            if (widget.connection != null) ...[
-              const SizedBox(height: 12),
-              _buildInfoRow('Host', widget.connection!.hostId, colorScheme),
+            const SizedBox(height: 8),
+            _buildStatusRow(colorScheme),
+            if (connection != null) ...[
+              const SizedBox(height: 16),
+              _buildInfoRow(Icons.computer, 'Host', connection!.hostId),
               const SizedBox(height: 8),
-              _buildInfoRow('Username', widget.connection!.username, colorScheme),
+              _buildInfoRow(Icons.person, 'Username', connection!.username),
             ],
           ],
         ),
@@ -82,16 +48,70 @@ class _ConnectionStatusCardState extends State<ConnectionStatusCard> with Single
     );
   }
 
-  Widget _buildInfoRow(String label, String value, ColorScheme colorScheme) {
+
+  Widget _buildStatusRow(ColorScheme colorScheme) {
+    final statusColor = _getStatusColor(colorScheme);
+    final statusText = _getStatusText();
+
     return Row(
       children: [
+        Icon(Icons.circle, color: statusColor, size: 12),
+        const SizedBox(width: 8),
+        Text(
+          statusText,
+          style: TextStyle(
+            color: statusColor,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Color _getStatusColor(ColorScheme colorScheme) {
+    switch (connectionState) {
+      case csm.ConnectionState.connected:
+        return Colors.green;
+      case csm.ConnectionState.disconnected:
+        return Colors.orange;
+      case csm.ConnectionState.connecting:
+        return Colors.blue;
+      case csm.ConnectionState.error:
+        return Colors.red;
+    }
+  }
+
+  String _getStatusText() {
+    switch (connectionState) {
+      case csm.ConnectionState.connected:
+        return 'Connected';
+      case csm.ConnectionState.disconnected:
+        return 'Disconnected';
+      case csm.ConnectionState.connecting:
+        return 'Connecting...';
+      case csm.ConnectionState.error:
+        return 'Connection Error';
+    }
+  }
+
+  Widget _buildInfoRow(IconData icon, String label, String value) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: Colors.grey[600]),
+        const SizedBox(width: 8),
         Text(
           '$label: ',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: colorScheme.onSecondaryContainer.withOpacity(0.8)),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.grey[700],
+          ),
         ),
-        Text(
-          value,
-          style: TextStyle(fontSize: 16, color: colorScheme.onSecondaryContainer),
+        Expanded(
+          child: Text(
+            value,
+            style: TextStyle(color: Colors.grey[600]),
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
       ],
     );

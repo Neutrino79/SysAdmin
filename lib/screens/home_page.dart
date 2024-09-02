@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'custom_scrollable_page.dart';
-import '../../services/connection_manager.dart';
+import '../services/connection_manager.dart';
+import '../services/connection_state_manager.dart' as csm;
 import '../widgets/home_page/connection-status-card.dart';
 import '../widgets/home_page/system-info-tile.dart';
 import '../widgets/home_page/quick-actions-grid.dart';
@@ -26,6 +28,8 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final connectionStateManager = Provider.of<csm.ConnectionStateManager>(context);
+
     return WillPopScope(
       onWillPop: () async {
         return await showDialog(
@@ -67,7 +71,10 @@ class _HomePageState extends State<HomePage> {
             content: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                ConnectionStatusCard(connection: activeConnection),
+                ConnectionStatusCard(
+                  connection: activeConnection,
+                  connectionState: connectionStateManager.state,
+                ),
                 const SizedBox(height: 24),
                 _buildSectionHeading(colorScheme, 'System Resources'),
                 const SizedBox(height: 24),
