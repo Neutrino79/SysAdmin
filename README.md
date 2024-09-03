@@ -3,7 +3,7 @@
 # 🚀 Sys-Admin
 ### _Empowering Linux Management, Anytime, Anywhere_
 
-![Sys-Admin Logo](https://via.placeholder.com/1200x300.png?text=Sys-Admin+Logo)
+![Sys-Admin Logo](https://github.com/Neutrino79/SysAdmin/blob/423255ff05643c9e5160004393d6011056d4e5b8/Screenshots/Sys-Admin%20Banner1.png)
 
 [![Flutter Version](https://img.shields.io/badge/Flutter-3.22.2-blue.svg)](https://flutter.dev/)
 [![Dart Version](https://img.shields.io/badge/Dart-3.4.0-blue.svg)](https://dart.dev/)
