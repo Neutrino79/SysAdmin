@@ -132,7 +132,7 @@ We're actively monitoring the situation and will update the project once the iss
 
 | Welcome page | SSH Manager | Home Screen |
 |:-----------:|:-------------------:|:-------------------:|
-| <img src="Screenshots/1.PNG" width="275" height="500"> | <img src="Screenshots/2.PNG" width="275" height="500"> | <img src="Screenshots/3.PNG" width="275" height="500"> |
+| ![Welcome Page](Screenshots/1.PNG) | ![SSH Manager](Screenshots/2.PNG) | ![Resource Monitor](Screenshots/3.PNG) |
 
 
 </div>
