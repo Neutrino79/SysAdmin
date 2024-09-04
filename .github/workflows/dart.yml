@@ -14,13 +14,14 @@ jobs:
     name: Build & Release
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-java@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
-          java-version: '12'
+          java-version: '17'
       - uses: subosito/flutter-action@v2
         with:
+          flutter-version: '3.22.2'  # Specify the Flutter version here
           channel: 'stable'
           architecture: x64
 
@@ -30,7 +31,6 @@ jobs:
           mv app-armeabi-v7a-release.apk SysAdmin-development.apk
           mv app-arm64-v8a-release.apk SysAdmin-arm64-development.apk
           mv app-x86_64-release.apk SysAdmin-x86_64-development.apk
-
       - run: |
           flutter build ios --release --no-codesign
           cd build/ios/iphoneos
@@ -39,10 +39,9 @@ jobs:
           ln -s ../Runner.app
           cd ..
           zip -r SysAdmin-development.ipa Payload
-
       - name: Push to Releases
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "build/app/outputs/apk/release/*,build/ios/iphoneos/myapp-development.ipa"
+          artifacts: "build/app/outputs/apk/release/*,build/ios/iphoneos/SysAdmin-development.ipa"
           tag: v0.$(printf "%02d" $((github.run_number)))
           token: ${{ secrets.TOKEN }}
