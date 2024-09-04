@@ -1,8 +1,8 @@
 // lib/widgets/home_page/connection-status-card.dart
 
 import 'package:flutter/material.dart';
-import '../../services/connection_manager.dart';
-import '../../services/connection_state_manager.dart' as csm;
+import '../../services/core/connection_manager.dart';
+import '../../services/core/connection_state_manager.dart' as csm;
 
 class ConnectionStatusCard extends StatelessWidget {
   final SSHConnection? connection;

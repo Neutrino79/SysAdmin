@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../services/connection_state_manager.dart' as csm;
+import '../services/core/connection_state_manager.dart' as csm;
 
 class ConnectionStatusOverlay extends StatelessWidget {
   const ConnectionStatusOverlay({Key? key}) : super(key: key);

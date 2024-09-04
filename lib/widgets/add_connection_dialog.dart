@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import '../services/connection_manager.dart';
-import '../services/ssh_manager.dart';
+import '../services/core/connection_manager.dart';
+import '../services/core/ssh_manager.dart';
 import 'dart:io';
 
 void showAddConnectionDialog(BuildContext context, Function refreshCallback) {

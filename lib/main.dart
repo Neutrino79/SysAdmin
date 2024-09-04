@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:provider/provider.dart';
-import 'services/connection_manager.dart';
-import 'services/ssh_manager.dart';
-import 'services/connection_state_manager.dart';
+import 'services/core/connection_manager.dart';
+import 'services/core/ssh_manager.dart';
+import 'services/core/connection_state_manager.dart';
 import 'screens/welcome_page.dart';
 import 'screens/register_connection_page.dart';
 import 'screens/home_page.dart';

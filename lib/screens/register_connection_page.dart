@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/add_connection_dialog.dart';
-import '../services/connection_manager.dart';
-import '../services/ssh_manager.dart';
+import '../services/core/connection_manager.dart';
+import '../services/core/ssh_manager.dart';
 import 'custom_scrollable_page.dart';
 
 class RegisterConnectionPage extends StatefulWidget {

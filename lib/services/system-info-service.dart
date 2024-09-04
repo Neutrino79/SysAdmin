@@ -1,5 +1,5 @@
 import 'dart:async';
-import '../services/ssh_manager.dart';
+import 'core/ssh_manager.dart';
 
 class SystemInfo {
   final double cpuUsage;
