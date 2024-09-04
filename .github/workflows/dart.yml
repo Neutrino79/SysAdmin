@@ -31,17 +31,10 @@ jobs:
           mv app-armeabi-v7a-release.apk SysAdmin-development.apk
           mv app-arm64-v8a-release.apk SysAdmin-arm64-development.apk
           mv app-x86_64-release.apk SysAdmin-x86_64-development.apk
-      - run: |
-          flutter build ios --release --no-codesign
-          cd build/ios/iphoneos
-          mkdir Payload
-          cd Payload
-          ln -s ../Runner.app
-          cd ..
-          zip -r SysAdmin-development.ipa Payload
+
       - name: Push to Releases
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "build/app/outputs/apk/release/*,build/ios/iphoneos/SysAdmin-development.ipa"
+          artifacts: "build/app/outputs/apk/release/*"
           tag: v0.$(printf "%02d" $((github.run_number)))
           token: ${{ secrets.TOKEN }}
