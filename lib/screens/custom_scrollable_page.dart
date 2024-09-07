@@ -12,6 +12,7 @@ class CustomScrollablePage extends StatelessWidget {
   final Color? drawerIconColor;
   final Widget? settingsWidget;
   final bool showSettings;
+  final Widget? connectionStatusWidget; // New parameter
 
   const CustomScrollablePage({
     Key? key,
@@ -30,6 +31,7 @@ class CustomScrollablePage extends StatelessWidget {
     this.drawerIconColor,
     this.settingsWidget,
     this.showSettings = true,
+    this.connectionStatusWidget, // New parameter
   }) : super(key: key);
 
   @override
@@ -57,19 +59,21 @@ class CustomScrollablePage extends StatelessWidget {
               )
                   : null,
               actions: [
-                if (showSettings)
-                  settingsWidget ?? IconButton(
-                    icon: const Icon(Icons.settings),
-                    color: colorScheme.onPrimary,
-                    onPressed: () {
-                      // TODO: Implement settings action
-                    },
-                  ),
+                if (connectionStatusWidget != null)
+                  connectionStatusWidget!
+                else if (showSettings)
+                  settingsWidget ??
+                      IconButton(
+                        icon: const Icon(Icons.settings),
+                        color: colorScheme.onPrimary,
+                        onPressed: () {
+                          // TODO: Implement settings action
+                        },
+                      ),
               ],
               flexibleSpace: FlexibleSpaceBar(
                 centerTitle: true,
-                title: Text(title,
-                    style: TextStyle(color: colorScheme.onPrimary)),
+                title: Text(title, style: TextStyle(color: colorScheme.onPrimary)),
                 background: Stack(
                   fit: StackFit.expand,
                   children: [
@@ -119,10 +123,56 @@ class CustomScrollablePage extends StatelessWidget {
         ),
       ),
       bottomNavigationBar: showBottomNav
-          ? _buildBottomNavigationBar(colorScheme)
+          ? _buildBottomNavigationBar(colorScheme, context)
           : null,
     );
   }
+
+  Widget _buildBottomNavigationBar(ColorScheme colorScheme, BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+      child: BottomNavigationBar(
+        items: bottomNavItems
+            .map((item) => BottomNavigationBarItem(
+          icon: Icon(item.icon),
+          label: item.label,
+        ))
+            .toList(),
+        currentIndex: selectedIndex,
+        selectedItemColor: colorScheme.primary,
+        unselectedItemColor: colorScheme.onSurface.withOpacity(0.6),
+        onTap: (index) {
+          _onBottomNavTap(index, context);
+        },
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+    );
+  }
+
+  void _onBottomNavTap(int index, BuildContext context) {
+    // Here we navigate to different routes based on the selected index.
+    // For example, assume you have routes defined like `/home`, `/terminal`, and `/logs`.
+
+    if (index == 0 && ModalRoute.of(context)?.settings.name != '/home') {
+      Navigator.pushReplacementNamed(context, '/home');
+    } else if (index == 1 && ModalRoute.of(context)?.settings.name != '/terminal') {
+      Navigator.pushReplacementNamed(context, '/terminal');
+    } else if (index == 2 && ModalRoute.of(context)?.settings.name != '/logs') {
+      Navigator.pushReplacementNamed(context, '/logs');
+    }
+  }
+
   Widget _buildDrawer(BuildContext context) {
     return Drawer(
       child: ListView(
@@ -204,45 +254,14 @@ class CustomScrollablePage extends StatelessWidget {
         Navigator.pop(context);
         if (title == 'SSH Manager') {
           Navigator.pushNamed(context, '/register');
-        }
-        else if (title == 'Terminal') {
-        Navigator.pushNamed(context, '/terminal');
-        }
-        else {
-          // TODO: Implement navigation to other features
+        } else if (title == 'Terminal') {
+          if (ModalRoute.of(context)?.settings.name != '/terminal') {
+            Navigator.pushNamed(context, '/terminal');
+          }
+        } else {
+          // Implement navigation to other features
         }
       },
-    );
-  }
-
-
-  Widget _buildBottomNavigationBar(ColorScheme colorScheme) {
-    return Container(
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, -5),
-          ),
-        ],
-      ),
-      child: BottomNavigationBar(
-        items: bottomNavItems
-            .map((item) => BottomNavigationBarItem(
-          icon: Icon(item.icon),
-          label: item.label,
-        ))
-            .toList(),
-        currentIndex: selectedIndex,
-        selectedItemColor: colorScheme.primary,
-        unselectedItemColor: colorScheme.onSurface.withOpacity(0.6),
-        onTap: onBottomNavTap,
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
     );
   }
 
@@ -275,11 +294,9 @@ class BackgroundPainter extends CustomPainter {
     final path = Path()
       ..moveTo(0, size.height * 0.7)
       ..quadraticBezierTo(
-          size.width * 0.25, size.height * 0.7,
-          size.width * 0.5, size.height * 0.8)
+          size.width * 0.25, size.height * 0.7, size.width * 0.5, size.height * 0.8)
       ..quadraticBezierTo(
-          size.width * 0.75, size.height * 0.9,
-          size.width, size.height * 0.8)
+          size.width * 0.75, size.height * 0.9, size.width, size.height * 0.8)
       ..lineTo(size.width, size.height)
       ..lineTo(0, size.height)
       ..close();

@@ -1,8 +1,14 @@
+// lib/screens/terminal_page.dart
+
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../widgets/ConnectionStatusPill.dart';
 import 'custom_scrollable_page.dart';
 import '../services/core/ssh_manager.dart';
+import '../services/core/connection_manager.dart';
 import '../services/core/connection_state_manager.dart' as csm;
+import '../widgets/connection_status_overlay.dart';
 
 class TerminalPage extends StatefulWidget {
   const TerminalPage({Key? key}) : super(key: key);
@@ -14,13 +20,27 @@ class TerminalPage extends StatefulWidget {
 class _TerminalPageState extends State<TerminalPage> {
   final TextEditingController _commandController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  final List<String> _terminalOutput = [];
+  final List<TerminalEntry> _terminalOutput = [];
   bool _isLoading = false;
+  SSHConnection? activeConnection;
+  StreamSubscription<String>? _sessionSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchActiveConnection();
+  }
+
+  void _fetchActiveConnection() async {
+    activeConnection = await ConnectionManager.getInstance().getActiveConnection();
+    setState(() {});
+  }
 
   @override
   void dispose() {
     _commandController.dispose();
     _scrollController.dispose();
+    _sessionSubscription?.cancel();
     super.dispose();
   }
 
@@ -30,7 +50,7 @@ class _TerminalPageState extends State<TerminalPage> {
 
     setState(() {
       _isLoading = true;
-      _terminalOutput.add('> $command');
+      _terminalOutput.add(TerminalEntry(command, isCommand: true));
     });
 
     final sshManager = SSHManager.getInstance();
@@ -39,9 +59,9 @@ class _TerminalPageState extends State<TerminalPage> {
     setState(() {
       _isLoading = false;
       if (result != null) {
-        _terminalOutput.add(result);
+        _terminalOutput.add(TerminalEntry(result));
       } else {
-        _terminalOutput.add('Error executing command');
+        _terminalOutput.add(TerminalEntry('Error executing command', isError: true));
       }
       _commandController.clear();
     });
@@ -61,153 +81,197 @@ class _TerminalPageState extends State<TerminalPage> {
     });
   }
 
+  void _resetTerminal() {
+    setState(() {
+      _terminalOutput.clear();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final connectionStateManager = Provider.of<csm.ConnectionStateManager>(context);
 
-    return CustomScrollablePage(
-      title: 'Terminal',
-      icon: Icons.terminal,
-      showBottomNav: true,
-      selectedIndex: 1,
-      onBottomNavTap: (index) {
-        // Handle navigation based on the tapped index
-      },
-      content: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+    return Scaffold(
+      body: Stack(
+        children: [
+          CustomScrollablePage(
+            title: 'Terminal',
+            icon: Icons.terminal,
+            connectionStatusWidget: ConnectionStatusPill(
+              connection: activeConnection,
+              connectionState: connectionStateManager.state,
+            ),
+            showBottomNav: true,
+            selectedIndex: 1,
+            onBottomNavTap: (index) {
+              // Handle navigation based on the tapped index
+            },
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildQuickCommandsBar(colorScheme),
+                  Flexible(
+                    fit: FlexFit.loose,
+                    child: _buildTerminalWindow(colorScheme),
+                  ),
+                  _buildCommandInput(colorScheme),
+                  _buildResetButton(colorScheme),
+                ],
+              ),
+            ),
+          ),
+          const ConnectionStatusOverlay(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickCommandsBar(ColorScheme colorScheme) {
+    return Container(
+      height: 50,
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: [
+          _buildQuickCommandChip(colorScheme, 'ls -la', Icons.list),
+          _buildQuickCommandChip(colorScheme, 'ps aux', Icons.memory),
+          _buildQuickCommandChip(colorScheme, 'df -h', Icons.storage),
+          _buildQuickCommandChip(colorScheme, 'top', Icons.analytics),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickCommandChip(ColorScheme colorScheme, String command, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      child: ActionChip(
+        avatar: Icon(icon, color: colorScheme.primary),
+        label: Text(command, style: TextStyle(color: colorScheme.onSurface)),
+        onPressed: () {
+          _commandController.text = command;
+          _sendCommand();
+        },
+        backgroundColor: colorScheme.surface,
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTerminalWindow(ColorScheme colorScheme) {
+    return Card(
+      elevation: 8,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      color: colorScheme.surfaceVariant,
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: SizedBox(
+          height: 200,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,  // Enable horizontal scrolling
+            child: SizedBox(
+              width: 600,  // Adjust the width to ensure horizontal scrollability
+              child: ListView.builder(
+                controller: _scrollController,
+                itemCount: _terminalOutput.length,
+                itemBuilder: (context, index) {
+                  final entry = _terminalOutput[index];
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    child: Text(
+                      entry.isCommand ? '> ${entry.text}' : entry.text,
+                      style: TextStyle(
+                        fontFamily: 'Courier',
+                        fontSize: 16,
+                        color: entry.isCommand
+                            ? colorScheme.primary
+                            : entry.isError
+                            ? colorScheme.error
+                            : colorScheme.onBackground,
+                        fontWeight: entry.isCommand ? FontWeight.bold : FontWeight.normal,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCommandInput(ColorScheme colorScheme) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Row(
           children: [
-            _buildConnectionStatus(connectionStateManager, colorScheme),
-            const SizedBox(height: 16),
-            _buildTerminalWindow(colorScheme),
-            const SizedBox(height: 16),
-            _buildCommandInput(colorScheme),
+            Expanded(
+              child: TextField(
+                controller: _commandController,
+                decoration: InputDecoration(
+                  hintText: 'Enter command',
+                  border: InputBorder.none,
+                  filled: true,
+                  fillColor: colorScheme.surface,
+                ),
+                onSubmitted: (_) => _sendCommand(),
+              ),
+            ),
+            IconButton(
+              icon: _isLoading
+                  ? SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
+                ),
+              )
+                  : Icon(Icons.send, color: colorScheme.primary),
+              onPressed: _isLoading ? null : _sendCommand,
+            ),
           ],
         ),
       ),
     );
   }
 
-
-  Widget _buildConnectionStatus(csm.ConnectionStateManager connectionStateManager, ColorScheme colorScheme) {
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: connectionStateManager.state == csm.ConnectionState.connected
-            ? colorScheme.primaryContainer
-            : colorScheme.errorContainer,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            connectionStateManager.state == csm.ConnectionState.connected
-                ? Icons.check_circle
-                : Icons.error,
-            color: connectionStateManager.state == csm.ConnectionState.connected
-                ? colorScheme.primary
-                : colorScheme.error,
-          ),
-          const SizedBox(width: 8),
-          Text(
-            connectionStateManager.state == csm.ConnectionState.connected
-                ? 'Connected'
-                : 'Disconnected',
-            style: TextStyle(
-              color: connectionStateManager.state == csm.ConnectionState.connected
-                  ? colorScheme.primary
-                  : colorScheme.error,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-
-  Widget _buildTerminalWindow(ColorScheme colorScheme) {
-    return Container(
-      height: 300, // Set a fixed height or use a Flexible widget
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceVariant,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: ListView.builder(
-        controller: _scrollController,
-        itemCount: _terminalOutput.length,
-        itemBuilder: (context, index) {
-          final output = _terminalOutput[index];
-          final isCommand = output.startsWith('> ');
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-            child: Text(
-              output,
-              style: TextStyle(
-                fontFamily: 'Courier',
-                fontSize: 14,
-                color: isCommand ? colorScheme.primary : colorScheme.onSurfaceVariant,
-                fontWeight: isCommand ? FontWeight.bold : FontWeight.normal,
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-
-  Widget _buildCommandInput(ColorScheme colorScheme) {
-    return Row(
-      children: [
-        Expanded(
-          child: TextField(
-            controller: _commandController,
-            decoration: InputDecoration(
-              hintText: 'Enter command',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              filled: true,
-              fillColor: colorScheme.surfaceVariant,
-            ),
-            onSubmitted: (_) => _sendCommand(),
-          ),
-        ),
-        const SizedBox(width: 8),
-        ElevatedButton(
-          onPressed: _isLoading ? null : _sendCommand,
+  Widget _buildResetButton(ColorScheme colorScheme) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Center(
+        child: ElevatedButton(
+          onPressed: _resetTerminal,
           style: ElevatedButton.styleFrom(
             backgroundColor: colorScheme.primary,
-            foregroundColor: colorScheme.onPrimary,
-            padding: const EdgeInsets.symmetric(vertical: 16),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(12),
             ),
           ),
-          child: _isLoading
-              ? const SizedBox(
-            width: 20,
-            height: 20,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-            ),
-          )
-              : const Icon(Icons.send),
+          child: Text(
+            'Reset Terminal',
+            style: TextStyle(color: colorScheme.onPrimary),
+          ),
         ),
-      ],
+      ),
     );
   }
+}
 
+class TerminalEntry {
+  final String text;
+  final bool isCommand;
+  final bool isError;
 
-
+  TerminalEntry(this.text, {this.isCommand = false, this.isError = false});
 }

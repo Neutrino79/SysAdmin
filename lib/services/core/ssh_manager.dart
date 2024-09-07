@@ -58,7 +58,6 @@ class SSHManager {
     if (_activeClient == null) {
       throw Exception('Not connected to any server. Please connect first.');
     }
-
     try {
       final result = await _activeClient!.run(command);
       return utf8.decode(result);
