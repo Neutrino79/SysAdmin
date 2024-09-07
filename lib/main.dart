@@ -30,19 +30,7 @@ Future<String> getInitialRoute(ConnectionManager connectionManager, SSHManager s
   } else {
     final activeConnection = await connectionManager.getActiveConnection();
     if (activeConnection != null) {
-      try {
-        final connected = await sshManager.connectWithSavedCredentials();
-        if (connected) {
           return '/home';
-        } else {
-          await connectionManager.deactivateCurrentConnection();
-          return '/register';
-        }
-      } catch (e) {
-        print('Error connecting with saved credentials: $e');
-        await connectionManager.deactivateCurrentConnection();
-        return '/register';
-      }
     } else {
       return '/register';
     }
@@ -75,7 +63,7 @@ class SysAdminApp extends StatelessWidget {
             '/welcome': (context) => const WelcomePage(),
             '/register': (context) => const RegisterConnectionPage(),
             '/home': (context) => const SysAdminWrapper(child: HomePage(), currentRouteName: '/home'),
-            //'/terminal': (context) => TerminalPage(),
+            '/terminal': (context) => const TerminalPage(),
           },
         );
       },
