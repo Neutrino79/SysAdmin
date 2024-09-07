@@ -116,12 +116,16 @@ class _RegisterConnectionPageState extends State<RegisterConnectionPage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 ElevatedButton(
-                  onPressed: () => _connectToServer(connection, setState),
+                  onPressed: () => connection.isActive
+                      ? _resumeConnection(connection, setState)
+                      : _connectToServer(connection, setState),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: colorScheme.primary,
+                    backgroundColor: connection.isActive
+                        ? colorScheme.secondary
+                        : colorScheme.primary,
                     foregroundColor: colorScheme.onPrimary,
                   ),
-                  child: const Text('Connect'),
+                  child: Text(connection.isActive ? 'Resume' : 'Connect'),
                 ),
                 IconButton(
                   icon: const Icon(Icons.more_vert),
@@ -156,6 +160,28 @@ class _RegisterConnectionPageState extends State<RegisterConnectionPage> {
       );
     }
   }
+
+  Future<void> _resumeConnection(SSHConnection connection, void Function(void Function()) setState) async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    final sshManager = SSHManager.getInstance();
+    final success = await sshManager.connectWithSavedCredentials();
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (success) {
+      Navigator.of(context).pushNamedAndRemoveUntil('/home', (Route<dynamic> route) => false);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to resume connection')),
+      );
+    }
+  }
+
 
   void _showBottomSheet(BuildContext context, SSHConnection connection) {
     showModalBottomSheet(

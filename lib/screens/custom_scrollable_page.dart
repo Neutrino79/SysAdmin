@@ -202,8 +202,12 @@ class CustomScrollablePage extends StatelessWidget {
       title: Text(title),
       trailing: Icon(Icons.arrow_forward_ios, size: 14),
       onTap: () {
-        // TODO: Implement navigation to feature
         Navigator.pop(context);
+        if (title == 'SSH Manager') {
+          Navigator.pushNamed(context, '/register');
+        } else {
+          // TODO: Implement navigation to other features
+        }
       },
     );
   }
