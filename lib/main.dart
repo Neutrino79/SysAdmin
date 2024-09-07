@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:provider/provider.dart';
+import 'package:sysadmin/screens/terminal_page.dart';
 import 'services/core/connection_manager.dart';
 import 'services/core/ssh_manager.dart';
 import 'services/core/connection_state_manager.dart';
@@ -74,6 +75,7 @@ class SysAdminApp extends StatelessWidget {
             '/welcome': (context) => const WelcomePage(),
             '/register': (context) => const RegisterConnectionPage(),
             '/home': (context) => const SysAdminWrapper(child: HomePage(), currentRouteName: '/home'),
+            //'/terminal': (context) => TerminalPage(),
           },
         );
       },

@@ -5,13 +5,13 @@ class CustomScrollablePage extends StatelessWidget {
   final IconData icon;
   final Widget content;
   final bool showDrawer;
-  final bool showSettings;
   final bool showBottomNav;
   final List<BottomNavItem> bottomNavItems;
   final int selectedIndex;
   final Function(int) onBottomNavTap;
-  final Color? settingsIconColor;
   final Color? drawerIconColor;
+  final Widget? settingsWidget;
+  final bool showSettings;
 
   const CustomScrollablePage({
     Key? key,
@@ -19,7 +19,6 @@ class CustomScrollablePage extends StatelessWidget {
     required this.icon,
     required this.content,
     this.showDrawer = true,
-    this.showSettings = true,
     this.showBottomNav = true,
     this.bottomNavItems = const [
       BottomNavItem(icon: Icons.home, label: 'Home'),
@@ -28,8 +27,9 @@ class CustomScrollablePage extends StatelessWidget {
     ],
     this.selectedIndex = 0,
     required this.onBottomNavTap,
-    this.settingsIconColor,
     this.drawerIconColor,
+    this.settingsWidget,
+    this.showSettings = true,
   }) : super(key: key);
 
   @override
@@ -58,9 +58,9 @@ class CustomScrollablePage extends StatelessWidget {
                   : null,
               actions: [
                 if (showSettings)
-                  IconButton(
+                  settingsWidget ?? IconButton(
                     icon: const Icon(Icons.settings),
-                    color: settingsIconColor ?? colorScheme.onPrimary,
+                    color: colorScheme.onPrimary,
                     onPressed: () {
                       // TODO: Implement settings action
                     },
@@ -123,7 +123,6 @@ class CustomScrollablePage extends StatelessWidget {
           : null,
     );
   }
-
   Widget _buildDrawer(BuildContext context) {
     return Drawer(
       child: ListView(
@@ -205,7 +204,11 @@ class CustomScrollablePage extends StatelessWidget {
         Navigator.pop(context);
         if (title == 'SSH Manager') {
           Navigator.pushNamed(context, '/register');
-        } else {
+        }
+        else if (title == 'Terminal') {
+        Navigator.pushNamed(context, '/terminal');
+        }
+        else {
           // TODO: Implement navigation to other features
         }
       },
