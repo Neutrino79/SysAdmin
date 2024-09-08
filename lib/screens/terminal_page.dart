@@ -2,6 +2,7 @@
 
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../widgets/ConnectionStatusPill.dart';
 import 'custom_scrollable_page.dart';
@@ -17,23 +18,59 @@ class TerminalPage extends StatefulWidget {
   _TerminalPageState createState() => _TerminalPageState();
 }
 
-class _TerminalPageState extends State<TerminalPage> {
+class _TerminalPageState extends State<TerminalPage> with AutomaticKeepAliveClientMixin {
   final TextEditingController _commandController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  final List<TerminalEntry> _terminalOutput = [];
+  List<TerminalEntry> _terminalOutput = [];
   bool _isLoading = false;
   SSHConnection? activeConnection;
   StreamSubscription<String>? _sessionSubscription;
+  late SSHManager _sshManager;
+  String _currentPrompt = '';
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
     super.initState();
+    _sshManager = SSHManager.getInstance();
     _fetchActiveConnection();
+    _restoreTerminalState();
+    _subscribeToTerminalOutput();
   }
 
   void _fetchActiveConnection() async {
     activeConnection = await ConnectionManager.getInstance().getActiveConnection();
+    _updatePrompt();
     setState(() {});
+  }
+
+  void _updatePrompt() {
+    if (activeConnection != null) {
+      _currentPrompt = '[${activeConnection!.username}@${activeConnection!.hostId}]\$ ';
+    } else {
+      _currentPrompt = 'Not connected\$ ';
+    }
+  }
+
+  void _restoreTerminalState() {
+    final savedOutput = _sshManager.getSavedTerminalOutput();
+    setState(() {
+      _terminalOutput = savedOutput;
+    });
+    _scrollToBottom();
+  }
+
+  void _subscribeToTerminalOutput() {
+    _sessionSubscription?.cancel();
+    _sessionSubscription = _sshManager.terminalOutput?.listen((output) {
+      setState(() {
+        _terminalOutput.add(TerminalEntry(output));
+        _sshManager.saveTerminalOutput(_terminalOutput);
+      });
+      _scrollToBottom();
+    });
   }
 
   @override
@@ -50,21 +87,23 @@ class _TerminalPageState extends State<TerminalPage> {
 
     setState(() {
       _isLoading = true;
-      _terminalOutput.add(TerminalEntry(command, isCommand: true));
+      _terminalOutput.add(TerminalEntry('$_currentPrompt$command', isCommand: true));
+      _sshManager.saveTerminalOutput(_terminalOutput);
     });
 
-    final sshManager = SSHManager.getInstance();
-    final result = await sshManager.executeCommand(command);
-
-    setState(() {
-      _isLoading = false;
-      if (result != null) {
-        _terminalOutput.add(TerminalEntry(result));
-      } else {
-        _terminalOutput.add(TerminalEntry('Error executing command', isError: true));
-      }
-      _commandController.clear();
-    });
+    try {
+      await _sshManager.sendCommand(command);
+    } catch (e) {
+      setState(() {
+        _terminalOutput.add(TerminalEntry('Error: $e', isError: true));
+        _sshManager.saveTerminalOutput(_terminalOutput);
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+        _commandController.clear();
+      });
+    }
 
     _scrollToBottom();
   }
@@ -80,6 +119,7 @@ class _TerminalPageState extends State<TerminalPage> {
       }
     });
   }
+
 
   void _resetTerminal() {
     setState(() {
@@ -107,14 +147,13 @@ class _TerminalPageState extends State<TerminalPage> {
             onBottomNavTap: (index) {
               // Handle navigation based on the tapped index
             },
-            content: SingleChildScrollView(
+            content: SingleChildScrollView(  // <-- Allow scrolling behavior for unbounded height
               child: Column(
-                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _buildQuickCommandsBar(colorScheme),
-                  Flexible(
-                    fit: FlexFit.loose,
+                  SizedBox(
+                    height: 400, // Set a height constraint to avoid the unbounded error
                     child: _buildTerminalWindow(colorScheme),
                   ),
                   _buildCommandInput(colorScheme),
@@ -128,6 +167,7 @@ class _TerminalPageState extends State<TerminalPage> {
       ),
     );
   }
+
 
   Widget _buildQuickCommandsBar(ColorScheme colorScheme) {
     return Container(
@@ -168,40 +208,27 @@ class _TerminalPageState extends State<TerminalPage> {
     return Card(
       elevation: 8,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      color: colorScheme.surfaceVariant,
+      color: Colors.black,
       child: Padding(
         padding: const EdgeInsets.all(12.0),
-        child: SizedBox(
-          height: 200,
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,  // Enable horizontal scrolling
-            child: SizedBox(
-              width: 600,  // Adjust the width to ensure horizontal scrollability
-              child: ListView.builder(
-                controller: _scrollController,
-                itemCount: _terminalOutput.length,
-                itemBuilder: (context, index) {
-                  final entry = _terminalOutput[index];
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 6),
-                    child: Text(
-                      entry.isCommand ? '> ${entry.text}' : entry.text,
-                      style: TextStyle(
-                        fontFamily: 'Courier',
-                        fontSize: 16,
-                        color: entry.isCommand
-                            ? colorScheme.primary
-                            : entry.isError
-                            ? colorScheme.error
-                            : colorScheme.onBackground,
-                        fontWeight: entry.isCommand ? FontWeight.bold : FontWeight.normal,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
+        child: SelectableText.rich(
+          TextSpan(
+            children: _terminalOutput.map((entry) {
+              return TextSpan(
+                text: '${entry.text}\n',
+                style: TextStyle(
+                  fontFamily: 'Courier',
+                  fontSize: 14,
+                  color: entry.isCommand
+                      ? Colors.green
+                      : entry.isError
+                      ? Colors.red
+                      : Colors.white,
+                ),
+              );
+            }).toList(),
           ),
+          style: const TextStyle(fontFamily: 'Courier', fontSize: 14),
         ),
       ),
     );
@@ -211,34 +238,46 @@ class _TerminalPageState extends State<TerminalPage> {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: Colors.black,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         child: Row(
           children: [
+            Text(
+              _currentPrompt,
+              style: const TextStyle(
+                fontFamily: 'Courier',
+                fontSize: 14,
+                color: Colors.green,
+              ),
+            ),
             Expanded(
               child: TextField(
                 controller: _commandController,
-                decoration: InputDecoration(
-                  hintText: 'Enter command',
+                decoration: const InputDecoration(
                   border: InputBorder.none,
-                  filled: true,
-                  fillColor: colorScheme.surface,
+                  filled: false,
+                ),
+                style: const TextStyle(
+                  fontFamily: 'Courier',
+                  fontSize: 14,
+                  color: Colors.white,
                 ),
                 onSubmitted: (_) => _sendCommand(),
               ),
             ),
-            IconButton(
-              icon: _isLoading
-                  ? SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
-                ),
-              )
-                  : Icon(Icons.send, color: colorScheme.primary),
-              onPressed: _isLoading ? null : _sendCommand,
+            _isLoading
+                ? const SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+              ),
+            )
+                : IconButton(
+              icon: const Icon(Icons.send, color: Colors.green),
+              onPressed: _sendCommand,
             ),
           ],
         ),
@@ -253,14 +292,14 @@ class _TerminalPageState extends State<TerminalPage> {
         child: ElevatedButton(
           onPressed: _resetTerminal,
           style: ElevatedButton.styleFrom(
-            backgroundColor: colorScheme.primary,
+            backgroundColor: Colors.red,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
           ),
-          child: Text(
-            'Reset Terminal',
-            style: TextStyle(color: colorScheme.onPrimary),
+          child: const Text(
+            'Clear Terminal',
+            style: TextStyle(color: Colors.white),
           ),
         ),
       ),
