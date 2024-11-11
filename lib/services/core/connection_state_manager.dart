@@ -1,4 +1,4 @@
-// lib/services/connection_state_manager.dart
+// connection_state_manager.dart
 
 import 'package:flutter/material.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';

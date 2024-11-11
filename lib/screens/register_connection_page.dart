@@ -1,3 +1,5 @@
+// register_connection_page.dart
+
 import 'package:flutter/material.dart';
 import '../widgets/add_connection_dialog.dart';
 import '../services/core/connection_manager.dart';

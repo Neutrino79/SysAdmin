@@ -1,4 +1,4 @@
-// lib/screens/terminal_page.dart
+// terminal_page.dart
 
 import 'dart:async';
 import 'package:flutter/material.dart';

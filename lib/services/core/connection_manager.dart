@@ -1,4 +1,4 @@
-// lib/services/connection_manager.dart
+// connection_manager.dart
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:convert';
