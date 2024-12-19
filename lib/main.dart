@@ -11,6 +11,7 @@ import 'screens/welcome_page.dart';
 import 'screens/register_connection_page.dart';
 import 'screens/home_page.dart';
 import 'widgets/connection_status_overlay.dart';
+import 'screens/user_administration.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -66,6 +67,7 @@ class SysAdminApp extends StatelessWidget {
             '/register': (context) => const RegisterConnectionPage(),
             '/home': (context) => const SysAdminWrapper(child: HomePage(), currentRouteName: '/home'),
             '/terminal': (context) => const TerminalPage(),
+            '/user_administration' : (context) => const UserAdministrationPage(),
           },
         );
       },
