@@ -387,7 +387,6 @@ class _UserAdministrationPageState extends State<UserAdministrationPage> {
             showBottomNav: true,
             selectedIndex: 2,
             onBottomNavTap: (index) {
-              // Handle navigation
             },
             content: _buildContent(),
           ),

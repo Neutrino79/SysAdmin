@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:provider/provider.dart';
+import 'package:sysadmin/screens/group_administration.dart';
 import 'package:sysadmin/screens/terminal_page.dart';
 import 'services/core/connection_manager.dart';
 import 'services/core/ssh_manager.dart';
@@ -68,6 +69,7 @@ class SysAdminApp extends StatelessWidget {
             '/home': (context) => const SysAdminWrapper(child: HomePage(), currentRouteName: '/home'),
             '/terminal': (context) => const TerminalPage(),
             '/user_administration' : (context) => const UserAdministrationPage(),
+            '/group_administration' : (context) => const GroupAdministrationPage(),
           },
         );
       },

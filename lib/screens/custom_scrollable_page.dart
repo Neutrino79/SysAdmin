@@ -266,6 +266,11 @@ class CustomScrollablePage extends StatelessWidget {
             Navigator.pushNamed(context, '/user_administration');
           }
         }
+        else if (title == 'Group Administration') {
+          if (ModalRoute.of(context)?.settings.name != '/group_administration') {
+            Navigator.pushNamed(context, '/group_administration');
+          }
+        }
         else {
           // Implement navigation to other features
         }
