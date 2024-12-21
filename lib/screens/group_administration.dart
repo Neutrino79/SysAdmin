@@ -452,21 +452,6 @@ class _GroupAdministrationPageState extends State<GroupAdministrationPage> {
     );
   }
 
-  Widget _buildContent() {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: _buildSearchBar(),
-        ),
-        Expanded(
-          child: _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _buildGroupList(),
-        ),
-      ],
-    );
-  }
 
   Widget _buildSearchBar() {
     return TextField(
